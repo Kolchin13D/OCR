@@ -2,6 +2,8 @@ package com.example.ocr;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
@@ -69,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
-                if (status != TextToSpeech.ERROR){
+                if (status != TextToSpeech.ERROR) {
                     textToSpeech.setLanguage(Locale.ENGLISH);
                 }
             }
@@ -103,8 +105,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == PICK_IMAGE){
-            if (data != null){
+        if (requestCode == PICK_IMAGE) {
+            if (data != null) {
                 byte[] bytes = new byte[0];
                 String filePath = null;
 
@@ -127,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
                                     Log.v("ERROR1", e.getMessage());
-                                    Toast.makeText(getApplicationContext(), "Fail", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getApplicationContext(), "Failed recognise", Toast.LENGTH_SHORT).show();
                                 }
                             });
 
@@ -141,5 +143,42 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void RecogniseTextBlock(Text text) {
+
+        // ml kit
+        String resultText = text.getText();
+        for (Text.TextBlock block : text.getTextBlocks()) {
+
+            String blockText = block.getText();
+            textView.append("\n");
+
+            Point[] blockPoints = block.getCornerPoints();
+            Rect blockFrame = block.getBoundingBox();
+
+            for (Text.Line line : block.getLines()) {
+
+                String lineText = line.getText();
+
+                Point[] linePoints = line.getCornerPoints();
+                Rect lineFrame = line.getBoundingBox();
+
+                for (Text.Element element : line.getElements()) {
+
+                    textView.append(" ");
+                    String elenentText = element.getText();
+                    textView.append(elenentText);
+
+                    Point[] elementPoints = element.getCornerPoints();
+                    Rect elementFrame = element.getBoundingBox();
+                }
+            }
+
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        if (!textToSpeech.isSpeaking()){
+            super.onPause();
+        }
     }
 }
